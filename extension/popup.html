@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>json-humanized</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <img src="icons/icon.svg" alt="Speaking person icon" width="28" height="28" class="logo-icon">
+      <div class="logo-text">
+        <span class="title">json-<span>humanized</span></span>
+        <span class="subtitle" id="hdr-sub">🗣️ Human language for data</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <select id="lang-select" title="Switch Language / Сменить язык">
+        <option value="en">🇬🇧 EN</option>
+        <option value="ru">🇷🇺 RU</option>
+      </select>
+      <button id="btn-from-tab" class="icon-btn" title="Grab JSON from active tab">📥 <span id="lbl-page-btn">Page</span></button>
+    </div>
+  </header>
+
+  <!-- Auto-detected JSON banner (hidden by default) -->
+  <div id="tab-detect-banner" class="detect-banner" style="display:none;">
+    <span>⚡ <span id="lbl-detected">Found JSON on active tab!</span></span>
+    <button id="btn-load-detected" class="banner-btn">Import</button>
+  </div>
+
+  <nav class="main-tabs">
+    <button class="nav-tab active" data-tab="humanize" id="nav-hum">📝 Humanize</button>
+    <button class="nav-tab" data-tab="diff" id="nav-diff">🔀 Diff</button>
+    <button class="nav-tab" data-tab="settings" id="nav-set">⚙️ Settings</button>
+  </nav>
+
+  <!-- TAB: HUMANIZE -->
+  <main id="tab-humanize" class="tab-content active">
+    <div class="input-header">
+      <div class="format-chips">
+        <button class="chip active" data-fmt="json">JSON</button>
+        <button class="chip" data-fmt="yaml">YAML</button>
+        <button class="chip" data-fmt="toml">TOML</button>
+      </div>
+      <div class="samples">
+        <span class="lbl-dim" id="lbl-samples">Sample:</span>
+        <button class="sample-btn" data-sample="user" id="s-user">user</button>
+        <button class="sample-btn" data-sample="api" id="s-api">api</button>
+        <button class="sample-btn" data-sample="error" id="s-err">error</button>
+        <button class="sample-btn" id="btn-prettify" title="Format / Prettify (2 spaces)">✨</button>
+        <button class="sample-btn" id="btn-clear" title="Clear input">🗑️</button>
+      </div>
+    </div>
+
+    <div class="drop-zone" id="drop-zone">
+      <textarea id="input-text" spellcheck="false" placeholder="Paste JSON / YAML / TOML or drop a file here..."></textarea>
+    </div>
+
+    <div class="controls-row">
+      <select id="sel-mode" title="Output Mode">
+        <option value="structured">Structured</option>
+        <option value="story">Story (📖)</option>
+        <option value="prose">Prose</option>
+        <option value="sentence">Sentence</option>
+      </select>
+      <select id="sel-format" title="Output Format">
+        <option value="plain">Plain text</option>
+        <option value="markdown">Markdown</option>
+        <option value="story">Story Box</option>
+        <option value="html">HTML</option>
+      </select>
+      <button id="btn-run" class="btn-primary">Humanize →</button>
+    </div>
+
+    <div class="output-header">
+      <span class="lbl-dim" id="lbl-res">Result</span>
+      <div class="out-actions">
+        <button id="btn-speak" class="action-btn" title="Read aloud (Text-to-Speech)">🔊 <span id="lbl-speak">Listen</span></button>
+        <button id="btn-copy" class="action-btn" title="Copy to clipboard">📋 <span id="lbl-copy">Copy</span></button>
+        <button id="btn-download" class="action-btn" title="Download text file">💾 <span id="lbl-save">Save</span></button>
+      </div>
+    </div>
+    <div id="output-text" class="output-pane placeholder">Humanized prose will appear here...</div>
+    <div class="popup-stats" id="popup-stats" style="display:none; font-family:var(--font-mono); font-size:11px; color:var(--muted); justify-content:space-between; padding:4px 2px;">
+      <span id="pop-words">words: —</span>
+      <span id="pop-read">read: —</span>
+    </div>
+  </main>
+
+  <!-- TAB: DIFF -->
+  <section id="tab-diff" class="tab-content">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+      <span class="lbl-dim" id="lbl-diff-hint">Drag &amp; drop files or paste:</span>
+      <button class="sample-btn" id="btn-diff-sample">📋 <span id="lbl-diff-sample">Sample diff</span></button>
+    </div>
+    <div class="diff-inputs">
+      <div class="diff-col">
+        <label id="lbl-diff-a">Original (Before)</label>
+        <textarea id="diff-a" spellcheck="false" placeholder='{"status": "pending", "count": 1}'></textarea>
+      </div>
+      <div class="diff-col">
+        <label id="lbl-diff-b">Updated (After)</label>
+        <textarea id="diff-b" spellcheck="false" placeholder='{"status": "active", "count": 2, "user": "Alice"}'></textarea>
+      </div>
+    </div>
+    <button id="btn-diff-run" class="btn-primary full-width">Compare Differences →</button>
+    <div id="diff-output" class="output-pane placeholder">Changes summary will appear here...</div>
+  </section>
+
+  <!-- TAB: SETTINGS -->
+  <section id="tab-settings" class="tab-content">
+    <div class="settings-group">
+      <label id="lbl-set-eng">Engine</label>
+      <select id="cfg-engine">
+        <option value="local">Local (Offline, 100% Free, Instant)</option>
+        <option value="openai">OpenAI (GPT-4o mini)</option>
+        <option value="anthropic">Anthropic (Claude)</option>
+        <option value="ollama">Ollama (Local AI: localhost:11434)</option>
+      </select>
+    </div>
+    <div class="settings-group" id="group-api-key">
+      <label>API Key</label>
+      <input type="password" id="cfg-api-key" placeholder="sk-...">
+      <small id="lbl-set-key-note">Stored securely in your local browser storage.</small>
+    </div>
+    <div class="settings-group">
+      <label id="lbl-set-lang">Default Output Language</label>
+      <select id="cfg-lang">
+        <option value="English">English</option>
+        <option value="Russian">Russian (Русский)</option>
+      </select>
+    </div>
+    <button id="btn-save-settings" class="btn-primary full-width">Save Settings</button>
+    <div id="settings-status" class="status-msg"></div>
+  </section>
+
+  <script src="lib/js-yaml.min.js"></script>
+  <script src="engine.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

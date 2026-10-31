@@ -4,6 +4,10 @@
 //  json-humanized · Output formatters
 // ─────────────────────────────────────────────────────────────────────────────
 
+function isRussian(lang) {
+  return typeof lang === 'string' && (lang.toLowerCase() === 'ru' || lang.toLowerCase() === 'russian');
+}
+
 /** Derive a readable label from sourceFormat option or filename extension */
 function sourceLabel(meta = {}) {
   const sf = (meta.sourceFormat || '').toLowerCase();
@@ -14,46 +18,55 @@ function sourceLabel(meta = {}) {
   if (ext === 'yaml' || ext === 'yml') return 'YAML';
   if (ext === 'toml')                  return 'TOML';
   if (ext === 'json')                  return 'JSON';
-  return 'Data';
+  return isRussian(meta.lang) ? 'Данные' : 'Data';
 }
 
 function formatPlain(text, meta = {}) {
+  const ru = isRussian(meta.lang);
   const lines = [];
   if (meta.filename) {
-    lines.push(`File: ${meta.filename}`);
+    lines.push(`${ru ? 'Файл' : 'File'}: ${meta.filename}`);
     lines.push('─'.repeat(50));
   }
   lines.push(text);
   if (meta.engine) {
     lines.push('');
-    lines.push(`[Processed by: ${meta.engine}]`);
+    lines.push(ru ? `[Обработано: ${meta.engine}]` : `[Processed by: ${meta.engine}]`);
   }
   return lines.join('\n');
 }
 
 function formatMarkdown(text, meta = {}) {
   const lbl   = sourceLabel(meta);
+  const ru    = isRussian(meta.lang);
   const lines = [];
 
-  lines.push(meta.filename
-    ? `# ${lbl} Analysis: \`${meta.filename}\``
-    : `# ${lbl} Analysis`);
+  if (ru) {
+    lines.push(meta.filename
+      ? `# Анализ ${lbl}: \`${meta.filename}\``
+      : `# Анализ ${lbl}`);
+  } else {
+    lines.push(meta.filename
+      ? `# ${lbl} Analysis: \`${meta.filename}\``
+      : `# ${lbl} Analysis`);
+  }
   lines.push('');
 
   if (meta.timestamp) {
-    lines.push(`> Generated on ${new Date(meta.timestamp).toLocaleString()}`);
+    const dStr = new Date(meta.timestamp).toLocaleString(ru ? 'ru-RU' : 'en-US');
+    lines.push(ru ? `> Сгенерировано ${dStr}` : `> Generated on ${dStr}`);
     lines.push('');
   }
 
-  lines.push('## Summary');
+  lines.push(ru ? '## Сводка' : '## Summary');
   lines.push('');
   lines.push(text);
   lines.push('');
 
   if (meta.stats) {
-    lines.push('## Metadata');
+    lines.push(ru ? '## Метаданные' : '## Metadata');
     lines.push('');
-    lines.push(`| Field | Value |`);
+    lines.push(ru ? `| Поле | Значение |` : `| Field | Value |`);
     lines.push(`|-------|-------|`);
     for (const [k, v] of Object.entries(meta.stats)) {
       lines.push(`| ${k} | ${v} |`);
@@ -63,7 +76,9 @@ function formatMarkdown(text, meta = {}) {
 
   if (meta.engine) {
     lines.push(`---`);
-    lines.push(`*Processed by json-humanized (${meta.engine} engine)*`);
+    lines.push(ru
+      ? `*Обработано json-humanized (движок ${meta.engine})*`
+      : `*Processed by json-humanized (${meta.engine} engine)*`);
   }
 
   return lines.join('\n');
@@ -71,15 +86,16 @@ function formatMarkdown(text, meta = {}) {
 
 function formatStory(text, meta = {}) {
   const lbl   = sourceLabel(meta);
+  const ru    = isRussian(meta.lang);
   const lines = [];
   lines.push('━'.repeat(60));
-  lines.push(`  📖  THE ${lbl.toUpperCase()} STORY`);
+  lines.push(ru ? `  📖  ИСТОРИЯ ДАННЫХ (${lbl.toUpperCase()})` : `  📖  THE ${lbl.toUpperCase()} STORY`);
   lines.push('━'.repeat(60));
   lines.push('');
   lines.push(text);
   lines.push('');
   lines.push('━'.repeat(60));
-  if (meta.filename) lines.push(`  Source: ${meta.filename}`);
+  if (meta.filename) lines.push(ru ? `  Источник: ${meta.filename}` : `  Source: ${meta.filename}`);
   return lines.join('\n');
 }
 

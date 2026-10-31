@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.3.0] — 2026-10-31
+
+### Added
+- **Browser Extension (Manifest V3)**: Chrome, Edge, Brave, Opera extension in `extension/` with popup UI, drag-and-drop file support, right-click context menu, and active-tab JSON detector.
+- **Text-to-Speech (Audio Read-Aloud 🔊)**: read humanized descriptions out loud in Russian or English.
+- **One-click Desktop Launchers**: `start-ui.bat` (Windows) and `start-ui.sh` (Linux/macOS) for non-terminal users.
+- **Local Web Server**: `jh --ui` / `npm run ui` starts local UI server and opens the browser.
+- **Multi-language offline engine**: Native Russian language support (`lang: 'ru'` or `--lang ru`) with Russian intros, labels, Russian numerals pluralization, and Russian diffs.
+- **VS Code Extension**: `vscode-extension/` package with context menu commands to humanize any `.json`, `.yaml`, or `.toml` file.
+- **Interactive Diff Viewer in UI**: visually compare two JSON datasets side-by-side.
+
+### Fixed
+- `src/humanizer.js`: `formatDatetime` now uses deterministic UTC timezone formatting when parsing ISO UTC timestamps (`Z` / `+00:00`), preventing inconsistent time output across different host timezones.
+- `src/cache.js`: added fallback to `os.tmpdir()` when `os.homedir()` is not writable (EPERM), ensuring caching works in sandboxes, restricted Windows environments, and Docker containers.
+
+---
+
 ## [2.2.0] — 2026-06-03
 
 ### Fixed

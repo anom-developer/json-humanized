@@ -12,6 +12,7 @@
   "scripts": {
     "test": "node test/index.test.js",
     "example": "node examples/demo.js",
+    "ui": "node bin/cli.js --ui",
     "lint": "echo 'No linter configured'",
     "cache:clear": "node -e \"require('./src/cache').clearCache(); console.log('Cache cleared')\"",
     "cache:stats": "node -e \"const s=require('./src/cache').cacheStats(); console.log(s)\""
@@ -61,10 +62,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/AceAnomDev/json-humanized.git"
+    "url": "https://github.com/anom-developer/json-humanized.git"
   },
   "bugs": {
-    "url": "https://github.com/AceAnomDev/json-humanized/issues"
+    "url": "https://github.com/anom-developer/json-humanized/issues"
   },
-  "homepage": "https://github.com/AceAnomDev/json-humanized#readme"
+  "homepage": "https://github.com/anom-developer/json-humanized#readme"
 }

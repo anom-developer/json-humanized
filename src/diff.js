@@ -103,8 +103,19 @@ function collectChanges(a, b) {
 
 // ─── render changes to text ──────────────────────────────────────────────────
 
-function renderChanges(changes, format = 'plain') {
+function isRussian(lang) {
+  return typeof lang === 'string' && (lang.toLowerCase() === 'ru' || lang.toLowerCase() === 'russian');
+}
+
+function renderChanges(changes, format = 'plain', lang = 'en') {
+  const ru = isRussian(lang);
+
   if (changes.length === 0) {
+    if (ru) {
+      return format === 'markdown'
+        ? '## ✅ Различий не обнаружено\n\nОба значения **идентичны**.'
+        : '✅ Различий не обнаружено — оба значения идентичны.';
+    }
     return format === 'markdown'
       ? '## ✅ No differences\n\nThe two JSON values are **identical**.'
       : '✅ No differences — the two JSON values are identical.';
@@ -118,64 +129,78 @@ function renderChanges(changes, format = 'plain') {
   const lines = [];
 
   if (format === 'markdown') {
-    lines.push(`## 🔀 JSON Diff — ${changes.length} change(s) found\n`);
+    lines.push(ru
+      ? `## 🔀 Сравнение — найдено ${changes.length} изменений\n`
+      : `## 🔀 JSON Diff — ${changes.length} change(s) found\n`);
 
     if (typeChg.length) {
-      lines.push(`### ⚠️ Type changed`);
+      lines.push(ru ? `### ⚠️ Изменился тип` : `### ⚠️ Type changed`);
       for (const c of typeChg) {
-        lines.push(`- Root type changed from **${c.from}** to **${c.to}**`);
+        lines.push(ru
+          ? `- Корневой тип изменился с **${c.from}** на **${c.to}**`
+          : `- Root type changed from **${c.from}** to **${c.to}**`);
       }
       lines.push('');
     }
 
     if (added.length) {
-      lines.push(`### ➕ Added (${added.length})`);
+      lines.push(ru ? `### ➕ Добавлено (${added.length})` : `### ➕ Added (${added.length})`);
       for (const c of added) {
-        lines.push(`- **${c.label}** \`${c.path}\` was added with value ${formatValue(c.value)}`);
+        lines.push(ru
+          ? `- **${c.label}** \`${c.path}\` добавлено со значением ${formatValue(c.value)}`
+          : `- **${c.label}** \`${c.path}\` was added with value ${formatValue(c.value)}`);
       }
       lines.push('');
     }
 
     if (removed.length) {
-      lines.push(`### ➖ Removed (${removed.length})`);
+      lines.push(ru ? `### ➖ Удалено (${removed.length})` : `### ➖ Removed (${removed.length})`);
       for (const c of removed) {
-        lines.push(`- **${c.label}** \`${c.path}\` was removed (was ${formatValue(c.value)})`);
+        lines.push(ru
+          ? `- **${c.label}** \`${c.path}\` удалено (было ${formatValue(c.value)})`
+          : `- **${c.label}** \`${c.path}\` was removed (was ${formatValue(c.value)})`);
       }
       lines.push('');
     }
 
     if (changed.length) {
-      lines.push(`### ✏️ Changed (${changed.length})`);
+      lines.push(ru ? `### ✏️ Изменено (${changed.length})` : `### ✏️ Changed (${changed.length})`);
       for (const c of changed) {
         lines.push(`- **${c.label}** \`${c.path}\`: ${formatValue(c.from)} → ${formatValue(c.to)}`);
       }
       lines.push('');
     }
   } else {
-    lines.push(`Found ${changes.length} difference(s):\n`);
+    lines.push(ru
+      ? `Найдено ${changes.length} различий:\n`
+      : `Found ${changes.length} difference(s):\n`);
 
     if (typeChg.length) {
       for (const c of typeChg) {
-        lines.push(`⚠  Root type changed: ${c.from} → ${c.to}`);
+        lines.push(ru
+          ? `⚠  Корневой тип изменился: ${c.from} → ${c.to}`
+          : `⚠  Root type changed: ${c.from} → ${c.to}`);
       }
     }
 
     if (added.length) {
-      lines.push(`\n➕ Added (${added.length}):`);
+      lines.push(ru ? `\n➕ Добавлено (${added.length}):` : `\n➕ Added (${added.length}):`);
       for (const c of added) {
         lines.push(`   + ${c.label} (${c.path}): ${formatValue(c.value)}`);
       }
     }
 
     if (removed.length) {
-      lines.push(`\n➖ Removed (${removed.length}):`);
+      lines.push(ru ? `\n➖ Удалено (${removed.length}):` : `\n➖ Removed (${removed.length}):`);
       for (const c of removed) {
-        lines.push(`   - ${c.label} (${c.path}): was ${formatValue(c.value)}`);
+        lines.push(ru
+          ? `   - ${c.label} (${c.path}): было ${formatValue(c.value)}`
+          : `   - ${c.label} (${c.path}): was ${formatValue(c.value)}`);
       }
     }
 
     if (changed.length) {
-      lines.push(`\n✏  Changed (${changed.length}):`);
+      lines.push(ru ? `\n✏  Изменено (${changed.length}):` : `\n✏  Changed (${changed.length}):`);
       for (const c of changed) {
         lines.push(`   ~ ${c.label} (${c.path}): ${formatValue(c.from)} → ${formatValue(c.to)}`);
       }
@@ -246,7 +271,7 @@ async function diffWithAI(a, b, options = {}) {
  * @returns {Promise<string>}
  */
 async function diff(a, b, options = {}) {
-  const { engine = 'local', format = 'plain' } = options;
+  const { engine = 'local', format = 'plain', lang = 'en' } = options;
 
   if (engine === 'ai') {
     return diffWithAI(a, b, options);
@@ -266,7 +291,7 @@ async function diff(a, b, options = {}) {
     }, null, 2);
   }
 
-  return renderChanges(changes, format);
+  return renderChanges(changes, format, lang);
 }
 
 /**

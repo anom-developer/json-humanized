@@ -4,15 +4,13 @@
 
 **Transform any JSON / YAML / TOML into natural human language**
 
-[![CI](https://github.com/AceAnomDev/json-humanized/actions/workflows/ci.yml/badge.svg)](https://github.com/AceAnomDev/json-humanized/actions/workflows/ci.yml)
-[![npm downloads](https://img.shields.io/npm/dm/json-humanized?style=flat-square&color=00e5ff)](https://www.npmjs.com/package/json-humanized)
-[![npm version](https://img.shields.io/npm/v/json-humanized?color=00e5ff&style=flat-square)](https://www.npmjs.com/package/json-humanized)
-[![license](https://img.shields.io/npm/l/json-humanized?style=flat-square)](LICENSE)
-[![node](https://img.shields.io/node/v/json-humanized?style=flat-square&color=339933)](package.json)
+[![CI](https://github.com/anom-developer/json-humanized/actions/workflows/ci.yml/badge.svg)](https://github.com/anom-developer/json-humanized/actions/workflows/ci.yml)
+[![license](https://img.shields.io/badge/license-MIT-00e5ff?style=flat-square)](LICENSE)
+[![version](https://img.shields.io/badge/version-2.2.0-00ff9d?style=flat-square)](package.json)
+[![node](https://img.shields.io/badge/node-%3E=16-339933?style=flat-square)](package.json)
 
-**[🌐 Live Demo](https://aceanomdev.github.io/json-humanized/)** &nbsp;·&nbsp; 
-**[📦 npm](https://www.npmjs.com/package/json-humanized)** &nbsp;·&nbsp;
-**[🐛 Issues](https://github.com/AceAnomDev/json-humanized/issues)**
+**[🌐 Live Demo](https://anom-developer.github.io/json-humanized/)** &nbsp;·&nbsp;
+**[🐛 Issues](https://github.com/anom-developer/json-humanized/issues)**
 · [Installation](#installation) · [Usage](#usage) · [API](#api) · [Config](#config-file)
 </div>
 
@@ -20,7 +18,7 @@
 
 ## What it does
 
-> **[🌐 Try it live →](https://aceanomdev.github.io/json-humanized/)**
+> **[🌐 Try it live →](https://anom-developer.github.io/json-humanized/)**
 
 ```bash
 $ jh user.json
@@ -39,6 +37,27 @@ This data contains a structured object with 6 fields.
 ```
 
 Works **100% offline** (no API key needed) — or plug in Claude AI / OpenAI / Ollama for smarter descriptions.
+
+---
+
+## 🖱️ No Terminal? No Problem! (Для всех пользователей)
+
+Если вы не умеете или не хотите пользоваться командной строкой (терминалом), вы можете использовать **json-humanized** в привычных программах:
+
+### 1. 🌐 Расширение для браузера (Chrome, Edge, Brave, Opera, Яндекс)
+- Превращает JSON прямо на веб-страницах и API-эндпоинтах в понятный текст в 1 клик!
+- Контекстное меню (ПКМ по выделенному JSON -> *«Humanize JSON»*).
+- Встроенная озвучка текста (Read Aloud 🔊), копирование и сохранение в файл.
+- Установка за 15 секунд: откройте `chrome://extensions`, включите режим разработчика и выберите папку `extension/`. Подробнее: [Инструкция к расширению](extension/README.md).
+
+### 2. ⚡ Запуск в 1 клик на компьютере (`start-ui.bat` / `start-ui.sh`)
+- На Windows просто дважды кликните по файлу **`start-ui.bat`**.
+- На Linux/macOS запустите **`start-ui.sh`**.
+- В браузере сразу откроется удобный визуальный интерфейс с поддержкой перетаскивания файлов (Drag & Drop), сравнением (Diff) и озвучкой!
+
+### 3. 🔌 Расширение для VS Code
+- Установите или скопируйте расширение из папки `vscode-extension/`.
+- Кликните правой кнопкой мыши по любому файлу `.json`, `.yaml` или `.toml` -> **«json-humanized: Transform to Human Language»** или **«Очеловечить (на русском)»**.
 
 ---
 

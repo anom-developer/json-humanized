@@ -85,9 +85,9 @@ async function humanize(data, options = {}) {
       return humanizeWithAI(data, { apiKey, aiProvider, mode, lang, context, maxChars, ...merged });
     }
     if (mode === 'sentence') {
-      return humanizeToSentence(data, { sourceFormat, maxItems: merged.maxItems });
+      return humanizeToSentence(data, { sourceFormat, maxItems: merged.maxItems, lang });
     }
-    return humanizeLocal(data, { mode, sourceFormat });
+    return humanizeLocal(data, { mode, sourceFormat, lang });
   };
 
   // Use cache only for AI engine (local is instant)
@@ -96,7 +96,7 @@ async function humanize(data, options = {}) {
     : await engineFn();
 
   const stats = computeStats(data);
-  const meta  = { engine, aiProvider, filename, sourceFormat, timestamp: new Date().toISOString(), stats, data };
+  const meta  = { engine, aiProvider, filename, sourceFormat, timestamp: new Date().toISOString(), stats, data, lang };
 
   // Template output takes priority over standard formatters
   if (template) {

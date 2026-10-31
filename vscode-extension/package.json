@@ -1,0 +1,62 @@
+{
+  "name": "vscode-json-humanized",
+  "displayName": "json-humanized — Turn JSON into Human Language",
+  "description": "Transform any JSON, YAML, or TOML into natural, readable human prose directly in VS Code. Offline & AI support.",
+  "version": "2.3.0",
+  "publisher": "AceAnomDev",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other",
+    "Formatters",
+    "Data Science"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:json",
+    "onLanguage:jsonc",
+    "onLanguage:yaml",
+    "onLanguage:toml"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "json-humanized.humanize",
+        "title": "🗣️ json-humanized: Transform to Human Language",
+        "category": "json-humanized"
+      },
+      {
+        "command": "json-humanized.humanizeRussian",
+        "title": "🗣️ json-humanized: Очеловечить (на русском)",
+        "category": "json-humanized"
+      },
+      {
+        "command": "json-humanized.diff",
+        "title": "🗣️ json-humanized: Compare two JSON files (Diff)",
+        "category": "json-humanized"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "json-humanized.humanize",
+          "when": "resourceExtname =~ /\\.(json|jsonc|yaml|yml|toml)$/i",
+          "group": "9_cutcopypaste@1"
+        },
+        {
+          "command": "json-humanized.humanizeRussian",
+          "when": "resourceExtname =~ /\\.(json|jsonc|yaml|yml|toml)$/i",
+          "group": "9_cutcopypaste@2"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "json-humanized.humanize",
+          "when": "resourceExtname =~ /\\.(json|jsonc|yaml|yml|toml)$/i",
+          "group": "navigation"
+        }
+      ]
+    }
+  }
+}

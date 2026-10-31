@@ -53,6 +53,11 @@ program
   .option('-e, --engine <engine>',      'Engine: local (default) or ai',                'local')
   .option('--provider <provider>',      'AI provider: anthropic, openai, ollama',       'anthropic')
 
+  // ── GUI / Web UI
+  .option('--ui',                       'Launch interactive web UI in browser')
+  .option('--gui',                      'Alias for --ui')
+  .option('--port <port>',              'Port for web UI (default: 3456)',              '3456')
+
   // ── Output
   // FIX: added csv and html to the format list in help text
   .option('-f, --format <format>',      'Output format: plain, markdown, story, json, sentence, csv, html',  'plain')
@@ -60,8 +65,8 @@ program
   .option('-o, --output <file>',        'Save output to a file')
   .option('--template <file>',          'Handlebars .hbs template for custom output')
 
-  // ── AI options
-  .option('-l, --lang <lang>',          'Output language (AI mode only)',                'English')
+  // ── Language & AI options
+  .option('-l, --lang <lang>',          'Output language: English, Russian/ru, etc.',    'English')
   .option('-c, --context <text>',       'Context hint for AI (e.g. "Stripe webhook")',   '')
   .option('-k, --api-key <key>',        'API key (overrides env variable)')
   .option('--max-chars <n>',            'Max JSON chars sent to AI (default 12000)',     '12000')
@@ -133,6 +138,13 @@ async function main() {
   const silent = opts.silent;
 
   if (!silent && opts.banner !== false) printBanner();
+
+  // ── GUI / Web UI mode ────────────────────────────────────────────────────
+  if (opts.ui || opts.gui) {
+    const { startServer } = require('../src/server');
+    await startServer({ port: parseInt(opts.port, 10), open: true });
+    return;
+  }
 
   // ── Cache management commands ────────────────────────────────────────────
   if (opts.cacheStats) {

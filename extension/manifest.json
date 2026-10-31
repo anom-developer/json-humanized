@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "json-humanized — Turn JSON into Human Language",
+  "version": "2.3.0",
+  "description": "Transform any JSON, YAML, or TOML into clear human-readable prose in 1 click. Works 100% offline or with AI.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "json-humanized — Human Language for JSON",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "contextMenus",
+    "activeTab",
+    "storage"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["lib/js-yaml.min.js", "engine.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

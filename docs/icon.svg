@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#141424"/>
+      <stop offset="100%" stop-color="#0a1828"/>
+    </linearGradient>
+    <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background badge -->
+  <rect x="4" y="4" width="120" height="120" rx="30" fill="url(#bgGrad)" stroke="#00e5ff" stroke-opacity="0.35" stroke-width="2"/>
+
+  <!-- Person Head Silhouette (facing right) -->
+  <g fill="#ffffff">
+    <!-- Head -->
+    <circle cx="48" cy="44" r="19"/>
+    <!-- Neck & Shoulders -->
+    <path d="M 40 60 L 56 60 L 56 72 Q 74 76 76 96 L 20 96 Q 22 76 40 72 Z"/>
+  </g>
+
+  <!-- Speech / Sound Waves (Electric Cyan) -->
+  <g fill="none" stroke="#00e5ff" stroke-width="4" stroke-linecap="round" filter="url(#cyanGlow)">
+    <!-- Wave 1 (inner) -->
+    <path d="M 72 38 A 16 16 0 0 1 72 58" />
+    <!-- Wave 2 (middle) -->
+    <path d="M 83 31 A 28 28 0 0 1 83 65" />
+    <!-- Wave 3 (outer) -->
+    <path d="M 94 24 A 40 40 0 0 1 94 72" />
+  </g>
+</svg>
+

@@ -3,77 +3,355 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>json-humanized — Live Demo</title>
-<!-- js-yaml for YAML parsing -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+<title>json-humanized — Turn JSON into Human Language</title>
+<!-- js-yaml for YAML parsing (local bundle first, zero latency offline) -->
+<script src="js-yaml.min.js"></script>
+<script>if (typeof jsyaml === 'undefined') { document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"><\/script>'); }</script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;700;800&display=swap');
   :root {
-    --bg:#0d0d12; --panel:#14141f; --border:#252535;
-    --cyan:#00e5ff; --green:#00ff9d; --yellow:#ffd166;
-    --red:#ff6b6b; --text:#e0e0f0; --muted:#6060a0;
-    --radius:12px;
+    --bg: #0d0d14;
+    --panel: #141522;
+    --border: #26273b;
+    --border-hover: #3b3c58;
+    --cyan: #00e5ff;
+    --cyan-dim: rgba(0, 229, 255, 0.12);
+    --cyan-border: rgba(0, 229, 255, 0.4);
+    --green: #00ff9d;
+    --yellow: #ffd166;
+    --red: #ff6b6b;
+    --text: #eaeaf6;
+    --text-dim: #b8b9d6;
+    --muted: #7d7fa6;
+    --radius: 10px;
+
+    /* Flawless typography across all platforms with 100% Cyrillic & Latin font parity */
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "Cascadia Code", "Segoe UI Mono", "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+
+    /* Consistent typographic scale */
+    --fs-xs: 12px;
+    --fs-sm: 13px;
+    --fs-base: 14px;
+    --fs-md: 16px;
+    --fs-lg: 18px;
+    --fs-xl: 22px;
   }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;display:grid;grid-template-rows:auto 1fr auto}
-  header{padding:28px 48px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-  header h1{font-size:1.5rem;font-weight:800;letter-spacing:-.03em}
-  header h1 span{color:var(--cyan)}
-  .badge{font-family:'JetBrains Mono',monospace;font-size:.7rem;background:var(--cyan)22;color:var(--cyan);border:1px solid var(--cyan)44;padding:3px 10px;border-radius:99px}
-  .links{margin-left:auto;display:flex;gap:12px}
-  .links a{font-size:.8rem;color:var(--muted);text-decoration:none;transition:color .2s}
-  .links a:hover{color:var(--cyan)}
-  main{display:grid;grid-template-columns:1fr 1fr;gap:0}
-  .pane{padding:28px 36px;display:flex;flex-direction:column;gap:14px}
-  .pane+.pane{border-left:1px solid var(--border)}
-  .pane-label{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px}
-  .dot{width:8px;height:8px;border-radius:50%}
-  .dot-cyan{background:var(--cyan)}.dot-green{background:var(--green)}
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: var(--fs-base);
+    line-height: 1.5;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto auto 1fr auto;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    padding: 16px 36px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    background: #10101a;
+  }
+  header h1 {
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-family: var(--font-sans);
+    line-height: 1.2;
+  }
+  header h1 span { color: var(--cyan); }
+  .badge {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    background: var(--cyan-dim);
+    color: var(--cyan);
+    border: 1px solid var(--cyan-border);
+    padding: 3px 10px;
+    border-radius: 99px;
+  }
+  .links { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+  .links a {
+    font-size: var(--fs-sm);
+    color: var(--muted);
+    text-decoration: none;
+    transition: color .2s;
+    font-family: var(--font-sans);
+    font-weight: 500;
+  }
+  .links a:hover { color: var(--cyan); }
+
+  .lang-toggle {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .lang-toggle:focus, .lang-toggle:hover { border-color: var(--cyan-border); }
+
+  /* Top Navigation tabs */
+  .top-nav {
+    display: flex;
+    gap: 8px;
+    padding: 10px 36px;
+    background: #11111a;
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--muted);
+    padding: 7px 16px;
+    border-radius: 6px;
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover { color: var(--text); }
+  .nav-btn.active {
+    background: var(--cyan-dim);
+    border-color: var(--cyan-border);
+    color: var(--cyan);
+  }
+
+  main { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  @media(max-width: 860px) { main { grid-template-columns: 1fr; } }
+
+  .pane { padding: 22px 32px; display: flex; flex-direction: column; gap: 12px; }
+  .pane + .pane { border-left: 1px solid var(--border); }
+  @media(max-width: 860px) { .pane + .pane { border-left: none; border-top: 1px solid var(--border); } }
+
+  .pane-label {
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .dot-cyan { background: var(--cyan); }
+  .dot-green { background: var(--green); }
+  
   /* format tabs */
-  .format-tabs{display:flex;gap:6px;border-bottom:1px solid var(--border);padding-bottom:10px}
-  .tab{background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 14px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:.72rem;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:.06em}
-  .tab.active{border-color:var(--cyan);color:var(--cyan);background:var(--cyan)11}
-  .tab:hover:not(.active){border-color:var(--border);color:var(--text)}
-  textarea,#output{flex:1;min-height:320px;font-family:'JetBrains Mono',monospace;font-size:.8rem;line-height:1.75;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px;color:var(--text);resize:none;outline:none;transition:border-color .2s}
-  textarea:focus{border-color:var(--cyan)66}
-  #output{white-space:pre-wrap;overflow-y:auto;color:#c0c0e0}
-  #output.placeholder{color:var(--muted);font-style:italic}
-  #output.loading{color:var(--cyan);animation:pulse 1s ease-in-out infinite}
-  #output.error{color:var(--red)}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
-  .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-  select{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-family:'Syne',sans-serif;font-size:.8rem;outline:none;cursor:pointer;transition:border-color .2s}
-  select:hover{border-color:var(--cyan)55}
-  #run-btn{margin-left:auto;background:var(--cyan);color:#000;border:none;padding:10px 28px;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;transition:transform .15s,opacity .15s;letter-spacing:.04em}
-  #run-btn:hover{opacity:.9;transform:translateY(-1px)}
-  #run-btn:active{transform:translateY(0)}
-  #run-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-  .samples{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-  .sample-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.7rem;cursor:pointer;transition:all .2s}
-  .sample-btn:hover{border-color:var(--cyan)66;color:var(--cyan)}
-  .info-bar{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);padding:6px 12px;background:var(--panel);border:1px solid var(--border);border-radius:6px;display:flex;gap:14px;flex-wrap:wrap}
-  .info-bar .ok{color:var(--green)}.info-bar .bad{color:var(--red)}.info-bar .hi{color:var(--cyan)}
-  footer{padding:14px 48px;border-top:1px solid var(--border);font-size:.72rem;color:var(--muted);display:flex;justify-content:space-between}
-  footer a{color:var(--muted);text-decoration:none}.footer a:hover{color:var(--cyan)}
-  .copy-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:.7rem;cursor:pointer;transition:all .2s;margin-left:auto}
-  .copy-btn:hover{border-color:var(--green)66;color:var(--green)}
+  .format-tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+  .tab {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .tab.active { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+  .tab:hover:not(.active) { border-color: var(--border-hover); color: var(--text); }
+
+  textarea, #output {
+    flex: 1;
+    min-height: 340px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    line-height: 1.65;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    color: var(--text);
+    resize: none;
+    outline: none;
+    transition: border-color .2s;
+  }
+  textarea:focus { border-color: var(--cyan-border); }
+  textarea.dragover {
+    border-color: var(--cyan) !important;
+    box-shadow: 0 0 16px rgba(0, 229, 255, 0.4) !important;
+    background: rgba(0, 229, 255, 0.05) !important;
+  }
+  #output { white-space: pre-wrap; overflow-y: auto; color: #d6d7ee; }
+  #output.placeholder { color: var(--muted); font-style: italic; }
+  #output.error { color: var(--red); }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  select {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: var(--font-sans);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    outline: none;
+    cursor: pointer;
+    transition: border-color .2s;
+  }
+  select:hover, select:focus { border-color: var(--cyan-border); }
+  
+  #run-btn, #btn-diff-run {
+    margin-left: auto;
+    background: var(--cyan);
+    color: #000;
+    border: none;
+    padding: 9px 24px;
+    border-radius: 8px;
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: var(--fs-sm);
+    cursor: pointer;
+    transition: transform .15s, opacity .15s;
+    letter-spacing: 0.02em;
+  }
+  #run-btn:hover, #btn-diff-run:hover { opacity: .92; transform: translateY(-1px); }
+  #run-btn:active, #btn-diff-run:active { transform: translateY(0); }
+  #run-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+  .samples { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  .sample-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .sample-btn:hover { border-color: var(--cyan-border); color: var(--cyan); }
+  
+  .info-bar {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--muted);
+    padding: 7px 14px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .info-bar .ok { color: var(--green); font-weight: 600; }
+  .info-bar .bad { color: var(--red); font-weight: 600; }
+  .info-bar .hi { color: var(--cyan); font-weight: 600; }
+  
+  .output-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+  }
+  .action-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .action-btn:hover { border-color: var(--green); color: var(--green); }
+  .action-btn.speak:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  /* Diff View section */
+  #view-diff {
+    display: none;
+    padding: 24px 36px;
+    gap: 16px;
+    flex-direction: column;
+  }
+  .diff-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .diff-grid textarea {
+    height: 180px;
+  }
+  #diff-out {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    line-height: 1.65;
+    white-space: pre-wrap;
+    min-height: 140px;
+    color: #d6d7ee;
+  }
+
+  footer {
+    padding: 14px 36px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-sans);
+    font-size: var(--fs-xs);
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: #0f1018;
+  }
+  footer a { color: var(--muted); text-decoration: none; }
+  footer a:hover { color: var(--cyan); }
 </style>
 </head>
 <body>
 
 <header>
-  <h1>json-<span>humanized</span></h1>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <img src="icon.svg" width="28" height="28" alt="Speaking person icon" style="vertical-align:middle;border-radius:6px;box-shadow:0 0 10px rgba(0,229,255,0.3);">
+    <h1 style="margin:0">json-<span>humanized</span></h1>
+  </div>
   <span class="badge">v2.2.0</span>
   <div class="links">
-    <a href="https://github.com/AceAnomDev/json-humanized" target="_blank">GitHub</a>
-    <a href="https://www.npmjs.com/package/json-humanized" target="_blank">npm</a>
+    <select id="ui-lang" class="lang-toggle" onchange="toggleLanguage(this.value)">
+      <option value="en">🇬🇧 English</option>
+      <option value="ru">🇷🇺 Русский</option>
+    </select>
+    <a href="https://github.com/anom-developer/json-humanized" target="_blank">GitHub</a>
   </div>
 </header>
 
-<main>
+<div class="top-nav">
+  <button class="nav-btn active" id="btn-tab-humanize" onclick="switchMainTab('humanize')">📝 <span id="lbl-tab-hum">Humanize</span></button>
+  <button class="nav-btn" id="btn-tab-diff" onclick="switchMainTab('diff')">🔀 <span id="lbl-tab-diff">Diff / Compare</span></button>
+  <button class="nav-btn" id="btn-tab-guide" onclick="switchMainTab('guide')">📖 <span id="lbl-tab-guide">Guide / Инструкция</span></button>
+</div>
+
+<!-- VIEW: HUMANIZE -->
+<main id="view-humanize">
   <!-- INPUT -->
   <div class="pane">
-    <div class="pane-label"><span class="dot dot-cyan"></span>Input</div>
+    <div class="pane-label"><span class="dot dot-cyan"></span><span id="lbl-input">Input</span></div>
 
     <!-- format tabs -->
     <div class="format-tabs">
@@ -83,17 +361,19 @@
     </div>
 
     <div class="samples">
-      <span style="font-size:.7rem;color:var(--muted)">Examples:</span>
+      <span style="font-size:.7rem;color:var(--muted)" id="lbl-samples">Examples:</span>
       <button class="sample-btn" onclick="loadSample('user')">user</button>
       <button class="sample-btn" onclick="loadSample('api')">api</button>
       <button class="sample-btn" onclick="loadSample('error')">error</button>
       <button class="sample-btn" onclick="loadSample('list')">list</button>
+      <button class="sample-btn" id="btn-prettify-doc" onclick="prettifyInput()" title="Format JSON / YAML (2 spaces)">✨</button>
+      <button class="sample-btn" id="btn-clear-doc" onclick="clearInput()" title="Clear input">🗑️</button>
     </div>
 
-    <textarea id="input" spellcheck="false" placeholder="Paste JSON, YAML, or TOML here…"></textarea>
+    <textarea id="input" spellcheck="false" placeholder="Paste JSON, YAML, or TOML here (or drag & drop a file)..."></textarea>
 
     <div class="controls">
-      <select id="sel-format">
+      <select id="sel-format" onchange="if(document.getElementById('input').value.trim()) run()">
         <option value="plain">plain</option>
         <option value="markdown">markdown</option>
         <option value="story">story</option>
@@ -101,11 +381,13 @@
         <option value="csv">csv</option>
         <option value="html">html</option>
       </select>
-      <select id="sel-mode">
+      <select id="sel-mode" onchange="if(document.getElementById('input').value.trim()) run()">
         <option value="structured">structured</option>
+        <option value="story">story</option>
         <option value="prose">prose</option>
+        <option value="sentence">sentence</option>
       </select>
-      <span style="font-size:.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace">Ctrl+↵</span>
+      <span style="font-size:var(--fs-xs);color:var(--muted);font-family:var(--font-mono)">Ctrl+↵</span>
       <button id="run-btn" onclick="run()">Humanize →</button>
     </div>
   </div>
@@ -113,22 +395,75 @@
   <!-- OUTPUT -->
   <div class="pane">
     <div class="pane-label">
-      <span class="dot dot-green"></span>Output
-      <button class="copy-btn" onclick="copyOutput()">copy</button>
+      <span class="dot dot-green"></span><span id="lbl-output">Output</span>
+      <div class="output-actions">
+        <button class="action-btn speak" onclick="speakOutput()">🔊 <span id="lbl-listen">Listen</span></button>
+        <button class="action-btn" onclick="downloadOutput()">💾 <span id="lbl-download">Save</span></button>
+        <button class="action-btn" onclick="copyOutput()">📋 <span id="lbl-copy">Copy</span></button>
+      </div>
     </div>
     <div id="output" class="placeholder">Your output will appear here…</div>
     <div class="info-bar">
       <span id="s-fmt">format: —</span>
       <span id="s-type">type: —</span>
       <span id="s-keys">fields: —</span>
+      <span id="s-words">words: —</span>
+      <span id="s-read">read: —</span>
       <span id="s-time">time: —</span>
     </div>
   </div>
 </main>
 
+<!-- VIEW: DIFF -->
+<section id="view-diff">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+    <span style="font-size:var(--fs-xs); color:var(--muted);" id="lbl-diff-guide">Drag &amp; drop files or paste JSON:</span>
+    <button class="sample-btn" onclick="loadSampleDiff()">📋 <span id="lbl-diff-sample-btn">Sample diff</span></button>
+  </div>
+  <div class="diff-grid">
+    <div>
+      <div class="pane-label" style="margin-bottom:8px" id="lbl-diff-title-a">Original (A)</div>
+      <textarea id="diff-in-a" placeholder='{"status": "pending", "count": 1}'></textarea>
+    </div>
+    <div>
+      <div class="pane-label" style="margin-bottom:8px" id="lbl-diff-title-b">Updated (B)</div>
+      <textarea id="diff-in-b" placeholder='{"status": "active", "count": 2, "name": "Alice"}'></textarea>
+    </div>
+  </div>
+  <button id="btn-diff-run" style="margin-left:0; width:100%" onclick="runDiff()"><span id="lbl-diff-run-btn">Compare Differences →</span></button>
+  <div id="diff-out">Differences will appear here...</div>
+</section>
+
+<!-- VIEW: GUIDE -->
+<section id="view-guide" style="display:none; padding:28px 36px; max-width:860px; margin:0 auto; line-height:1.7;">
+  <h2 style="font-size:var(--fs-xl); color:var(--cyan); margin-bottom:12px; font-weight:700;">🗣️ Инструкция по установке (Для обычных пользователей)</h2>
+  <p style="color:var(--text); margin-bottom:20px; font-size:var(--fs-base);">Вам не нужно знать терминал или уметь программировать! Выберите любой удобный способ:</p>
+
+  <div style="background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:18px;">
+    <h3 style="color:var(--green); font-size:var(--fs-lg); margin-bottom:8px; font-weight:600;">1. 🌐 Установка расширения в браузер (Chrome, Edge, Яндекс, Brave)</h3>
+    <ol style="margin-left:22px; color:var(--text-dim); font-size:var(--fs-sm); line-height:1.7;">
+      <li>В браузере откройте адрес: <code>chrome://extensions</code> (в Edge: <code>edge://extensions</code>, в Яндекс.Браузере: <code>browser://extensions</code>).</li>
+      <li>В правом верхнем углу включите тумблер <b>«Режим разработчика»</b> (Developer mode).</li>
+      <li>В левом верхнем углу нажмите кнопку <b>«Загрузить распакованное расширение»</b> (Load unpacked).</li>
+      <li>Выберите папку <code>extension</code> из проекта и нажмите «Выбор папки».</li>
+      <li><b>Готово!</b> Значок 🗣️ появится в панели расширений. Можно выделять любой JSON на любом сайте и через правую кнопку мыши мгновенно его очеловечивать!</li>
+    </ol>
+  </div>
+
+  <div style="background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:18px;">
+    <h3 style="color:var(--yellow); font-size:var(--fs-lg); margin-bottom:8px; font-weight:600;">2. 💻 Запуск программы на компьютере в 1 клик</h3>
+    <p style="color:var(--text-dim); font-size:var(--fs-sm); margin-bottom:8px; line-height:1.7;">Просто дважды кликните по файлу <b><code>start-ui.bat</code></b> (для Windows) или <b><code>start-ui.sh</code></b> (для Mac/Linux). Браузер сам откроет приложение со всеми функциями!</p>
+  </div>
+
+  <div style="background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:20px;">
+    <h3 style="color:var(--cyan); font-size:var(--fs-lg); margin-bottom:8px; font-weight:600;">3. 🔌 Расширение для редактора VS Code</h3>
+    <p style="color:var(--text-dim); font-size:var(--fs-sm); line-height:1.7;">Скопируйте папку <code>vscode-extension</code> в папку <code>.vscode/extensions</code> на вашем компьютере. При клике правой кнопкой мыши по любому JSON-файлу появится пункт <b>«🗣️ json-humanized: Transform to Human Language»</b>.</p>
+  </div>
+</section>
+
 <footer>
-  <span>json-humanized · MIT</span>
-  <span><a href="https://github.com/AceAnomDev/json-humanized/issues" target="_blank">Report issue</a></span>
+  <span>json-humanized · MIT · Works 100% Offline</span>
+  <span><a href="https://github.com/anom-developer/json-humanized" target="_blank">Chrome Extension & Guides</a> &nbsp;·&nbsp; <a href="https://github.com/anom-developer/json-humanized/issues" target="_blank">Report issue</a></span>
 </footer>
 
 <script>
@@ -294,19 +629,15 @@ country = "US"`,
 };
 
 // ── minimal inline TOML parser ─────────────────────────────────────────────
-// Handles the common subset: key = value, [section], [[array]]
 function parseTOML(text) {
-  const root   = {};
-  let   cur    = root;
-  let   arrKey = null;
-  let   arrRef = null;
+  const root = {};
+  let cur = root;
 
   const lines = text.split('\n');
   for (let raw of lines) {
     const line = raw.trim();
     if (!line || line.startsWith('#')) continue;
 
-    // [[array of tables]]
     const arrMatch = line.match(/^\[\[(.+)\]\]$/);
     if (arrMatch) {
       const parts = arrMatch[1].trim().split('.');
@@ -320,11 +651,9 @@ function parseTOML(text) {
       const newEntry = {};
       obj[last].push(newEntry);
       cur = newEntry;
-      arrKey = null;
       continue;
     }
 
-    // [section]
     const secMatch = line.match(/^\[(.+)\]$/);
     if (secMatch) {
       const parts = secMatch[1].trim().split('.');
@@ -333,11 +662,9 @@ function parseTOML(text) {
         if (!cur[p]) cur[p] = {};
         cur = cur[p];
       }
-      arrKey = null;
       continue;
     }
 
-    // key = value
     const eqIdx = line.indexOf('=');
     if (eqIdx < 0) continue;
     const key = line.slice(0, eqIdx).trim();
@@ -352,8 +679,8 @@ function parseTOMLValue(val) {
   if (val === 'false') return false;
   if (/^-?\d+\.\d+$/.test(val)) return parseFloat(val);
   if (/^-?\d+$/.test(val))      return parseInt(val, 10);
-  if (val.startsWith('"') && val.endsWith('"'))   return val.slice(1,-1).replace(/\\n/g,'\n').replace(/\\t/g,'\t');
-  if (val.startsWith("'") && val.endsWith("'"))   return val.slice(1,-1);
+  if (val.startsWith('"') && val.endsWith('"')) return val.slice(1,-1).replace(/\\n/g,'\n').replace(/\\t/g,'\t');
+  if (val.startsWith("'") && val.endsWith("'")) return val.slice(1,-1);
   if (val.startsWith('[') && val.endsWith(']')) {
     const inner = val.slice(1,-1).trim();
     if (!inner) return [];
@@ -364,18 +691,129 @@ function parseTOMLValue(val) {
 
 // ── state ────────────────────────────────────────────────────────────────────
 let currentFmt = 'json';
+let currentLang = 'en';
+
+// ── instant live metadata detection (0ms delay) ──────────────────────────────
+function updateLiveMeta() {
+  const inputEl = document.getElementById('input');
+  if (!inputEl) return;
+  const raw = inputEl.value.trim();
+  const fmtEl = document.getElementById('s-fmt');
+  const typeEl = document.getElementById('s-type');
+  const keysEl = document.getElementById('s-keys');
+  if (!fmtEl || !typeEl || !keysEl) return;
+  const isRu = currentLang === 'ru';
+
+  if (!raw) {
+    fmtEl.innerHTML = `${isRu ? 'формат' : 'format'}: <span class="hi">—</span>`;
+    typeEl.textContent = `${isRu ? 'тип' : 'type'}: —`;
+    keysEl.textContent = `${isRu ? 'поля' : 'fields'}: —`;
+    return;
+  }
+
+  let parsed = null;
+  let activeFmt = currentFmt;
+
+  try {
+    parsed = parseInput(raw, currentFmt);
+  } catch (e) {
+    if (currentFmt !== 'json') {
+      try {
+        parsed = JSON.parse(raw);
+        activeFmt = 'json';
+      } catch {}
+    }
+    if (!parsed && currentFmt !== 'yaml' && typeof jsyaml !== 'undefined') {
+      try {
+        parsed = jsyaml.load(raw);
+        if (parsed && typeof parsed === 'object') activeFmt = 'yaml';
+      } catch {}
+    }
+  }
+
+  if (parsed !== null && parsed !== undefined) {
+    const isArr = Array.isArray(parsed);
+    const count = isArr ? parsed.length : (typeof parsed === 'object' ? Object.keys(parsed).length : 1);
+    const typeLabel = isArr
+      ? (isRu ? 'массив' : 'array')
+      : (typeof parsed === 'object' ? (isRu ? 'объект' : 'object') : typeof parsed);
+
+    fmtEl.innerHTML = `${isRu ? 'формат' : 'format'}: <span class="hi">${activeFmt.toUpperCase()}</span>`;
+    typeEl.innerHTML = `${isRu ? 'тип' : 'type'}: <span class="ok">${typeLabel}</span>`;
+    keysEl.innerHTML = isArr
+      ? `${isRu ? 'элементов' : 'items'}: <span class="ok">${count}</span>`
+      : `${isRu ? 'полей' : 'fields'}: <span class="ok">${count}</span>`;
+  } else {
+    fmtEl.innerHTML = `${isRu ? 'формат' : 'format'}: <span class="bad">${currentFmt.toUpperCase()} (?)</span>`;
+    typeEl.innerHTML = `${isRu ? 'тип' : 'type'}: <span class="bad">${isRu ? 'ошибка' : 'syntax error'}</span>`;
+    keysEl.textContent = `${isRu ? 'поля' : 'fields'}: —`;
+  }
+}
+
+function toggleLanguage(lang) {
+  currentLang = lang;
+  const isRu = lang === 'ru';
+  document.getElementById('lbl-tab-hum').textContent = isRu ? 'Преобразование' : 'Humanize';
+  document.getElementById('lbl-tab-diff').textContent = isRu ? 'Сравнение (Diff)' : 'Diff / Compare';
+  document.getElementById('lbl-input').textContent = isRu ? 'Входные данные' : 'Input';
+  document.getElementById('lbl-output').textContent = isRu ? 'Результат' : 'Output';
+  document.getElementById('lbl-samples').textContent = isRu ? 'Примеры:' : 'Examples:';
+  document.getElementById('lbl-listen').textContent = isRu ? 'Слушать' : 'Listen';
+  document.getElementById('lbl-download').textContent = isRu ? 'Скачать' : 'Save';
+  document.getElementById('lbl-copy').textContent = isRu ? 'Копировать' : 'Copy';
+  document.getElementById('run-btn').textContent = isRu ? 'Очеловечить →' : 'Humanize →';
+  if (document.getElementById('lbl-diff-guide')) {
+    document.getElementById('lbl-diff-guide').textContent = isRu ? 'Перетащите файлы или вставьте JSON:' : 'Drag & drop files or paste JSON:';
+  }
+  if (document.getElementById('lbl-diff-sample-btn')) {
+    document.getElementById('lbl-diff-sample-btn').textContent = isRu ? 'Пример различий' : 'Sample diff';
+  }
+  if (document.getElementById('lbl-diff-title-a')) {
+    document.getElementById('lbl-diff-title-a').textContent = isRu ? 'Оригинал (A)' : 'Original (A)';
+  }
+  if (document.getElementById('lbl-diff-title-b')) {
+    document.getElementById('lbl-diff-title-b').textContent = isRu ? 'Обновленный (B)' : 'Updated (B)';
+  }
+  if (document.getElementById('lbl-diff-run-btn')) {
+    document.getElementById('lbl-diff-run-btn').textContent = isRu ? 'Сравнить различия →' : 'Compare Differences →';
+  }
+  if (document.getElementById('btn-prettify-doc')) {
+    document.getElementById('btn-prettify-doc').title = isRu ? 'Форматировать JSON / YAML (2 пробела)' : 'Format JSON / YAML (2 spaces)';
+  }
+  if (document.getElementById('btn-clear-doc')) {
+    document.getElementById('btn-clear-doc').title = isRu ? 'Очистить поле ввода' : 'Clear input';
+  }
+  updateLiveMeta();
+}
+
+function switchMainTab(tab) {
+  document.getElementById('btn-tab-humanize').classList.toggle('active', tab === 'humanize');
+  document.getElementById('btn-tab-diff').classList.toggle('active', tab === 'diff');
+  document.getElementById('btn-tab-guide').classList.toggle('active', tab === 'guide');
+  document.getElementById('view-humanize').style.display = tab === 'humanize' ? 'grid' : 'none';
+  document.getElementById('view-diff').style.display = tab === 'diff' ? 'flex' : 'none';
+  document.getElementById('view-guide').style.display = tab === 'guide' ? 'block' : 'none';
+}
 
 function switchInputFormat(fmt) {
   currentFmt = fmt;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
-  loadSample('user'); // reload current sample in new format
-  document.getElementById('output').textContent = 'Your output will appear here…';
+  if (typeof event !== 'undefined' && event && event.target && event.target.classList) {
+    event.target.classList.add('active');
+  } else {
+    document.querySelectorAll('.tab').forEach(t => {
+      if (t.textContent.trim().toLowerCase() === fmt) t.classList.add('active');
+    });
+  }
+  loadSample('user');
+  document.getElementById('output').textContent = currentLang === 'ru' ? 'Результат появится здесь…' : 'Your output will appear here…';
   document.getElementById('output').className = 'placeholder';
+  updateLiveMeta();
 }
 
 function loadSample(key) {
   document.getElementById('input').value = SAMPLES[currentFmt][key] || '';
+  updateLiveMeta();
 }
 
 // ── parse input ──────────────────────────────────────────────────────────────
@@ -394,8 +832,15 @@ function parseInput(text, fmt) {
 function fmtLabel(fmt) {
   if (fmt === 'yaml') return 'YAML';
   if (fmt === 'toml') return 'TOML';
-  return 'data';
+  return currentLang === 'ru' ? 'JSON' : 'data';
 }
+
+const RU_KEYS_MAP = {
+  'id': 'идентификатор', 'uuid': 'идентификатор', 'name': 'имя', 'email': 'эл. почта',
+  'age': 'возраст', 'balance': 'баланс', 'created at': 'дата создания', 'status': 'статус',
+  'address': 'адрес', 'city': 'город', 'country': 'страна', 'tags': 'теги',
+  'is active': 'активен', 'password': 'пароль', 'score': 'оценка', 'rating': 'рейтинг'
+};
 
 function detectCtx(k) {
   k = k.toLowerCase();
@@ -413,31 +858,42 @@ function detectCtx(k) {
 }
 
 function fmtKey(k) {
-  return k.replace(/([A-Z])/g,' $1').replace(/[_\-]+/g,' ').trim().toLowerCase();
+  const base = k.replace(/([A-Z])/g,' $1').replace(/[_\-]+/g,' ').trim().toLowerCase();
+  if (currentLang === 'ru') return RU_KEYS_MAP[base] || base;
+  return base;
 }
 
 function fmtVal(v, key='') {
-  if (v === null || v === undefined) return 'not specified';
-  if (v === '') return 'empty';
+  const isRu = currentLang === 'ru';
+  if (v === null || v === undefined) return isRu ? 'не указано' : 'not specified';
+  if (v === '') return isRu ? 'пусто' : 'empty';
   const ctx = detectCtx(key);
-  if (typeof v === 'boolean') return v ? 'yes' : 'no';
-  if (ctx === 'sensitive') return '*** (hidden)';
+  if (typeof v === 'boolean') return v ? (isRu ? 'да' : 'yes') : (isRu ? 'нет' : 'no');
+  if (ctx === 'sensitive') return isRu ? '*** (скрыто в целях безопасности)' : '*** (hidden)';
   if (ctx === 'money' && typeof v==='number') {
     return v>=1e6?`$${(v/1e6).toFixed(2)}M`:v>=1e3?`$${(v/1e3).toFixed(1)}K`:`$${v.toFixed(2)}`;
   }
-  if (ctx === 'age'    && typeof v==='number') return `${v} year${v!==1?'s':''} old`;
-  if (ctx === 'rating' && typeof v==='number') return `${v}/10`;
+  if (ctx === 'age'    && typeof v==='number') return isRu ? `${v} лет` : `${v} year${v!==1?'s':''} old`;
+  if (ctx === 'rating' && typeof v==='number') return isRu ? `${v} из 10` : `${v}/10`;
   if (ctx === 'datetime' && typeof v==='string') {
-    try { const d=new Date(v); if(!isNaN(d)) return d.toLocaleString('en-US',{year:'numeric',month:'long',day:'numeric'}); } catch{}
+    try {
+      const d=new Date(v);
+      if(!isNaN(d)) {
+        return d.toLocaleString(isRu ? 'ru-RU' : 'en-US', {
+          year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',
+          ...(v.endsWith('Z') || v.includes('+00:00') ? { timeZone: 'UTC' } : {})
+        });
+      }
+    } catch{}
   }
-  if (ctx === 'email') return `email: ${v}`;
+  if (ctx === 'email') return isRu ? `эл. почта: ${v}` : `email: ${v}`;
   if (Array.isArray(v)) {
-    if (!v.length) return 'none';
+    if (!v.length) return isRu ? 'пустой список' : 'none';
     if (v.every(x=>typeof x!=='object')) return v.join(', ');
-    return `${v.length} item(s)`;
+    return isRu ? `${v.length} эл.` : `${v.length} item(s)`;
   }
-  if (typeof v==='object') return `{${Object.keys(v).length} field(s)}`;
-  if (typeof v==='number') return v.toLocaleString();
+  if (typeof v==='object') return isRu ? `{${Object.keys(v).length} полей}` : `{${Object.keys(v).length} field(s)}`;
+  if (typeof v==='number') return v.toLocaleString(isRu ? 'ru-RU' : 'en-US');
   if (typeof v==='string' && v.length>150) return v.slice(0,150)+'…';
   return String(v);
 }
@@ -447,11 +903,11 @@ function objLines(obj, depth=0) {
   for (const [k,v] of Object.entries(obj)) {
     const label = fmtKey(k);
     if (Array.isArray(v) && v.length && typeof v[0]==='object') {
-      lines.push(`${pfx}• ${cap(label)}: ${v.length} entr${v.length===1?'y':'ies'}`);
+      lines.push(`${pfx}• ${cap(label)}: ${v.length} ${currentLang === 'ru' ? 'записей' : 'entries'}`);
       v.slice(0,3).forEach((it,i) => {
         lines.push(`${pfx}  [${i+1}] ${objLines(it,0).join(' ').slice(0,120)}`);
       });
-      if (v.length>3) lines.push(`${pfx}  … and ${v.length-3} more`);
+      if (v.length>3) lines.push(`${pfx}  ${currentLang === 'ru' ? `… и ещё ${v.length-3}` : `… and ${v.length-3} more`}`);
     } else if (v && typeof v==='object' && !Array.isArray(v)) {
       lines.push(`${pfx}• ${cap(label)}:`);
       lines.push(...objLines(v,depth+1));
@@ -464,48 +920,257 @@ function objLines(obj, depth=0) {
 
 function cap(s) { return s?s[0].toUpperCase()+s.slice(1):'' }
 
-function humanizeData(data, fmt, outFmt) {
+function dataSentenceFragment(obj, maxFields = 6) {
+  const isRu = currentLang === 'ru';
+  const entries = Object.entries(obj || {}).filter(([,v]) => v!==undefined && v!==null && v!=='').slice(0, maxFields);
+  if (!entries.length) return isRu ? 'нет данных' : 'no data';
+  const parts = entries.map(([k,v]) => {
+    const label = fmtKey(k);
+    const ctx = detectCtx(k);
+    if (ctx === 'sensitive') return isRu ? `${label} скрыт(о)` : `${label} is hidden`;
+    if (typeof v === 'object' && v !== null) {
+      if (Array.isArray(v)) return `${label} (${v.length} ${isRu ? 'эл.' : 'items'})`;
+      return `${label} — объект`;
+    }
+    const val = fmtVal(v, k);
+    return isRu ? `${label}: ${val}` : `${label} is ${val}`;
+  });
+  if (parts.length === 1) return parts[0];
+  const last = parts.pop();
+  return isRu ? `${parts.join(', ')} и ${last}` : `${parts.join(', ')}, and ${last}`;
+}
+
+function dataToStory(data, fmt) {
   const lbl = fmtLabel(fmt);
-  let intro='', body='';
+  const isRu = currentLang === 'ru';
+  if (data === null || data === undefined) return isRu ? 'Это короткая история о пустоте: данных нет.' : 'This is a brief story of emptiness: no data was provided.';
+  if (typeof data !== 'object') return isRu ? `История одного значения: ${fmtVal(data)}.` : `The story of a single value: ${fmtVal(data)}.`;
 
   if (Array.isArray(data)) {
-    intro = `This ${lbl} contains a list of ${data.length} record${data.length!==1?'s':''}.`;
-    const limit = Math.min(data.length, 10);
-    const lines = [];
-    for(let i=0;i<limit;i++){
-      if (typeof data[i]==='object') lines.push(`\nRecord ${i+1}:\n${objLines(data[i],1).join('\n')}`);
-      else lines.push(`\nItem ${i+1}: ${fmtVal(data[i])}`);
-    }
-    if (data.length>10) lines.push(`\n… and ${data.length-10} more records`);
-    body = lines.join('');
-  } else if (data && typeof data==='object') {
-    const keys = Object.keys(data);
-    if ('error' in data || 'errors' in data)
-      intro=`This ${lbl} describes an error or failure response.`;
-    else if ('data' in data && ('meta' in data||'links' in data))
-      intro=`This ${lbl} is an API response with data and metadata.`;
-    else
-      intro=`This ${lbl} contains a structured object with ${keys.length} field${keys.length!==1?'s':''}.`;
-    body = '\n' + objLines(data,0).join('\n');
-  } else {
-    return `This ${lbl} contains a single value: ${data}`;
+    if (!data.length) return isRu ? 'Хроника пустого списка без записей.' : 'A chronicle of an empty collection.';
+    const p1 = isRu ? `Перед нами разворачивается хроника из ${data.length} записей.` : `Here unfolds a chronicle gathering ${data.length} records.`;
+    const samples = data.slice(0, 3).map((item, i) => {
+      if (typeof item === 'object' && item !== null) {
+        return isRu ? `Эпизод ${i+1}: ${dataSentenceFragment(item, 5)}.` : `Episode ${i+1}: ${dataSentenceFragment(item, 5)}.`;
+      }
+      return isRu ? `Элемент ${i+1}: ${fmtVal(item)}.` : `Item ${i+1}: ${fmtVal(item)}.`;
+    });
+    const rem = data.length - samples.length;
+    const remStr = rem > 0 ? (isRu ? ` Далее хроника продолжается ещё ${rem} записями.` : ` The chronicle proceeds with ${rem} more records.`) : '';
+    return `${p1}\n\n${samples.join(' ')}${remStr}`;
   }
 
-  const text = `${intro}\n${body}`;
+  const keys = Object.keys(data);
+  if (!keys.length) return isRu ? 'Перед нами пустая запись без единого поля.' : 'Here lies an empty record with no fields recorded.';
+
+  if ('error' in data || 'errors' in data) {
+    const errObj = typeof data.error === 'object' && data.error !== null ? data.error : data;
+    const code = errObj.code || errObj.status || data.code;
+    const msg = errObj.message || errObj.msg || data.message || (typeof data.error === 'string' ? data.error : '');
+    const details = errObj.details || errObj.detail || data.details;
+    const ts = data.timestamp || errObj.timestamp || data.time;
+    const parts = [];
+    if (isRu) {
+      parts.push(`В системе произошел инцидент: зафиксирована ошибка${code ? ` с кодом ${code}` : ''}.`);
+      if (msg) parts.push(`Сообщение системы: «${msg}».`);
+      if (details) parts.push(`Подробности: ${details}.`);
+      if (ts) parts.push(`Событие произошло ${fmtVal(ts, 'timestamp')}.`);
+    } else {
+      parts.push(`A system incident was registered: error${code ? ` with code ${code}` : ''}.`);
+      if (msg) parts.push(`Reported message: "${msg}".`);
+      if (details) parts.push(`Details: ${details}.`);
+      if (ts) parts.push(`Logged on ${fmtVal(ts, 'timestamp')}.`);
+    }
+    return parts.join(' ');
+  }
+
+  const nameKey = keys.find(k => /^(name|title|username|full_name)$/i.test(k));
+  const idKey = keys.find(k => /^(id|uuid|user_id|order_id)$/i.test(k));
+  const createdKey = keys.find(k => /(created|registered|started|joined)(_at)?$/i.test(k));
+  const updatedKey = keys.find(k => /(updated|modified|last_login|logged_at)(_at)?$/i.test(k));
+  const statusKey = keys.find(k => /^(status|state)$/i.test(k));
+  const activeKey = keys.find(k => /(^is_active$|^active$|^enabled$)/i.test(k));
+  const emailKey = keys.find(k => /email/i.test(k));
+  const phoneKey = keys.find(k => /phone/i.test(k));
+  const cityKey = keys.find(k => /city/i.test(k));
+  const countryKey = keys.find(k => /country/i.test(k));
+  const moneyKey = keys.find(k => /(balance|price|salary|total|cost|amount)/i.test(k));
+  const tagsKey = keys.find(k => /^(tags|features|roles)$/i.test(k));
+  const ageKey = keys.find(k => /^age$/i.test(k));
+  const ratingKey = keys.find(k => /^(rating|score)$/i.test(k));
+
+  const sentences = [];
+  const subjectName = nameKey ? String(data[nameKey]) : '';
+  const idVal = idKey ? String(data[idKey]) : '';
+
+  if (subjectName && idVal) {
+    sentences.push(isRu ? `Это история о ${subjectName} (${fmtKey(idKey)}: ${idVal}).` : `This is the story of ${subjectName} (${fmtKey(idKey)}: ${idVal}).`);
+  } else if (subjectName) {
+    sentences.push(isRu ? `Перед нами история о ${subjectName}.` : `This is the story of ${subjectName}.`);
+  } else if (idVal) {
+    sentences.push(isRu ? `Перед нами запись объекта с идентификатором ${idVal}.` : `This record represents an entity identified as ${idVal}.`);
+  } else {
+    sentences.push(isRu ? `Перед нами история одного структурированного объекта.` : `Here is the story told by this data object.`);
+  }
+
+  if (ageKey && typeof data[ageKey] === 'number') {
+    sentences.push(isRu ? `Возраст составляет ${data[ageKey]} лет.` : `Currently ${data[ageKey]} years old.`);
+  }
+
+  if (createdKey && data[createdKey]) {
+    const cTime = fmtVal(data[createdKey], createdKey);
+    if (updatedKey && data[updatedKey]) {
+      const uTime = fmtVal(data[updatedKey], updatedKey);
+      sentences.push(isRu
+        ? `История началась ${cTime}, а последнее обновление зафиксировано ${uTime}.`
+        : `The journey began on ${cTime}, with the latest activity noted on ${uTime}.`);
+    } else {
+      sentences.push(isRu ? `Событие или регистрация датируется ${cTime}.` : `Originated on ${cTime}.`);
+    }
+  } else if (updatedKey && data[updatedKey]) {
+    sentences.push(isRu ? `Последняя активность зафиксирована ${fmtVal(data[updatedKey], updatedKey)}.` : `Most recent activity occurred on ${fmtVal(data[updatedKey], updatedKey)}.`);
+  }
+
+  if (statusKey && data[statusKey]) {
+    sentences.push(isRu ? `Текущий статус — ${fmtVal(data[statusKey], statusKey)}.` : `The operational status stands as ${fmtVal(data[statusKey], statusKey)}.`);
+  }
+  if (activeKey && typeof data[activeKey] === 'boolean') {
+    if (isRu) sentences.push(data[activeKey] ? 'Запись активна и находится в рабочем состоянии.' : 'Запись в данный момент неактивна.');
+    else sentences.push(data[activeKey] ? 'The profile is currently active.' : 'The profile is currently inactive.');
+  }
+
+  if (moneyKey && data[moneyKey] !== undefined) {
+    sentences.push(isRu ? `Показатель ${fmtKey(moneyKey)} составляет ${fmtVal(data[moneyKey], moneyKey)}.` : `The recorded ${fmtKey(moneyKey)} equals ${fmtVal(data[moneyKey], moneyKey)}.`);
+  }
+  if (ratingKey && data[ratingKey] !== undefined) {
+    sentences.push(isRu ? `Рейтинг оценивается как ${fmtVal(data[ratingKey], ratingKey)}.` : `The rating is evaluated at ${fmtVal(data[ratingKey], ratingKey)}.`);
+  }
+
+  const contactParts = [];
+  if (emailKey && data[emailKey]) contactParts.push(isRu ? `эл. почта ${data[emailKey]}` : `email at ${data[emailKey]}`);
+  if (phoneKey && data[phoneKey]) contactParts.push(isRu ? `телефон ${data[phoneKey]}` : `phone at ${data[phoneKey]}`);
+  if (contactParts.length) {
+    sentences.push(isRu ? `Для связи используется: ${contactParts.join(', ')}.` : `Contact channels include: ${contactParts.join(', ')}.`);
+  }
+
+  if ((cityKey && data[cityKey]) || (countryKey && data[countryKey])) {
+    const loc = [data[cityKey], data[countryKey]].filter(Boolean).join(', ');
+    sentences.push(isRu ? `Географическое расположение: ${loc}.` : `Located in ${loc}.`);
+  }
+
+  if (tagsKey && Array.isArray(data[tagsKey]) && data[tagsKey].length) {
+    sentences.push(isRu ? `С объектом связаны метки: ${data[tagsKey].join(', ')}.` : `Associated with tags: ${data[tagsKey].join(', ')}.`);
+  }
+
+  const handled = new Set([nameKey, idKey, createdKey, updatedKey, statusKey, activeKey, emailKey, phoneKey, cityKey, countryKey, moneyKey, tagsKey, ageKey, ratingKey]);
+  const remScalars = keys.filter(k => !handled.has(k) && typeof data[k] !== 'object' && data[k] !== null && data[k] !== undefined);
+  if (remScalars.length > 0) {
+    const frag = remScalars.slice(0, 5).map(k => `${fmtKey(k)}: ${fmtVal(data[k], k)}`).join(', ');
+    sentences.push(isRu ? `Среди других характеристик: ${frag}.` : `Additional attributes include: ${frag}.`);
+  }
+
+  const remNested = keys.filter(k => !handled.has(k) && typeof data[k] === 'object' && data[k] !== null);
+  if (remNested.length > 0) {
+    const descriptions = remNested.slice(0, 3).map(k => {
+      const v = data[k];
+      if (Array.isArray(v)) return `${fmtKey(k)} (${v.length} эл.)`;
+      return `${fmtKey(k)} (${dataSentenceFragment(v, 3)})`;
+    }).join('; ');
+    sentences.push(isRu ? `В структуре содержатся разделы: ${descriptions}.` : `The structure also contains sections: ${descriptions}.`);
+  }
+
+  return sentences.join(' ');
+}
+
+function dataToProse(data, fmt) {
+  const lbl = fmtLabel(fmt);
+  const isRu = currentLang === 'ru';
+  if (data === null || data === undefined) return isRu ? 'Значение отсутствует (пусто).' : 'The value is empty.';
+  if (typeof data !== 'object' || Array.isArray(data)) {
+    if (Array.isArray(data)) return isRu ? `Этот ${lbl} содержит список из ${data.length} записей.` : `This ${lbl} lists ${data.length} records.`;
+    return isRu ? `Этот ${lbl} содержит: ${fmtVal(data)}.` : `This ${lbl} contains: ${fmtVal(data)}.`;
+  }
+  const keys = Object.keys(data);
+  const p1 = isRu ? `Этот ${lbl} содержит структурированные данные из ${keys.length} полей.` : `This ${lbl} contains structured data with ${keys.length} fields.`;
+  const scalars = Object.fromEntries(Object.entries(data).filter(([,v]) => typeof v !== 'object' && v !== null && v !== undefined));
+  const nested = Object.entries(data).filter(([,v]) => typeof v === 'object' && v !== null);
+
+  const paragraphs = [p1];
+  if (Object.keys(scalars).length > 0) {
+    paragraphs.push(isRu ? `В записи указано, что ${dataSentenceFragment(scalars, 8)}.` : `It records that ${dataSentenceFragment(scalars, 8)}.`);
+  }
+  if (nested.length > 0) {
+    const nestedParts = nested.slice(0, 4).map(([k, v]) => {
+      const label = fmtKey(k);
+      if (Array.isArray(v)) {
+        return isRu ? `Раздел «${label}» содержит список из ${v.length} элементов.` : `The "${label}" section contains ${v.length} items.`;
+      }
+      return isRu ? `Вложенный блок «${label}» включает в себя: ${dataSentenceFragment(v, 5)}.` : `The nested block "${label}" includes: ${dataSentenceFragment(v, 5)}.`;
+    });
+    paragraphs.push(nestedParts.join(' '));
+  }
+  return paragraphs.join('\n\n');
+}
+
+function humanizeData(data, fmt, outFmt, mode = 'structured') {
+  const lbl = fmtLabel(fmt);
+  const isRu = currentLang === 'ru';
+  let text = '';
+
+  if (mode === 'story') {
+    text = dataToStory(data, fmt);
+  } else if (mode === 'prose') {
+    text = dataToProse(data, fmt);
+  } else if (mode === 'sentence' || outFmt === 'sentence') {
+    if (Array.isArray(data)) return isRu ? `Этот ${lbl} содержит список из ${data.length} записей.` : `This ${lbl} lists ${data.length} record${data.length!==1?'s':''}.`;
+    const pairs=Object.entries(data).filter(([,v])=>typeof v!=='object'&&v!==null&&v!=='').slice(0,5);
+    const parts=pairs.map(([k,v])=>fmtKey(k)+(isRu ? ': ' : ' is ')+fmtVal(v,k));
+    if (!parts.length) return isRu ? `Этот ${lbl} — объект.` : `This ${lbl} is an object.`;
+    const last=parts.pop();
+    text = isRu
+      ? `Этот ${lbl} описывает запись, где ${parts.length?parts.join(', ')+' и ':''}${last}.`
+      : `This ${lbl} describes a record where ${parts.length?parts.join(', ')+', and ':''}${last}.`;
+  } else {
+    // Default: structured mode
+    let intro='', body='';
+    if (Array.isArray(data)) {
+      intro = isRu
+        ? `Этот ${lbl} содержит список из ${data.length} записей.`
+        : `This ${lbl} contains a list of ${data.length} record${data.length!==1?'s':''}.`;
+      const limit = Math.min(data.length, 10);
+      const lines = [];
+      for(let i=0;i<limit;i++){
+        if (typeof data[i]==='object') lines.push(`\n${isRu ? 'Запись' : 'Record'} ${i+1}:\n${objLines(data[i],1).join('\n')}`);
+        else lines.push(`\n${isRu ? 'Элемент' : 'Item'} ${i+1}: ${fmtVal(data[i])}`);
+      }
+      if (data.length>10) lines.push(`\n… ${isRu ? `и ещё ${data.length-10} записей` : `and ${data.length-10} more records`}`);
+      body = lines.join('');
+    } else if (data && typeof data==='object') {
+      const keys = Object.keys(data);
+      if ('error' in data || 'errors' in data)
+        intro=isRu ? `Этот ${lbl} описывает ошибку или сбой.` : `This ${lbl} describes an error or failure response.`;
+      else if ('data' in data && ('meta' in data||'links' in data))
+        intro=isRu ? `Этот ${lbl} является ответом API с данными и метаданными.` : `This ${lbl} is an API response with data and metadata.`;
+      else
+        intro=isRu ? `Этот ${lbl} содержит структурированный объект из ${keys.length} полей.` : `This ${lbl} contains a structured object with ${keys.length} field${keys.length!==1?'s':''}.`;
+      body = '\n' + objLines(data,0).join('\n');
+    } else {
+      return isRu ? `Этот ${lbl} содержит одно значение: ${data}` : `This ${lbl} contains a single value: ${data}`;
+    }
+    text = `${intro}\n${body}`;
+  }
 
   if (outFmt==='markdown') {
-    return `# ${lbl.toUpperCase()} Analysis\n\n## Summary\n\n${text}\n\n---\n*Processed by json-humanized (local engine)*`;
+    return isRu
+      ? `# Анализ ${lbl}\n\n## Сводка\n\n${text}\n\n---\n*Обработано json-humanized (локальный движок)*`
+      : `# ${lbl.toUpperCase()} Analysis\n\n## Summary\n\n${text}\n\n---\n*Processed by json-humanized (local engine)*`;
   }
   if (outFmt==='story') {
-    return `${'━'.repeat(52)}\n  📖  THE ${lbl.toUpperCase()} STORY\n${'━'.repeat(52)}\n\n${text}\n\n${'━'.repeat(52)}`;
+    const title = isRu ? `  📖  ИСТОРИЯ ДАННЫХ (${lbl})` : `  📖  THE ${lbl.toUpperCase()} STORY`;
+    return `${'━'.repeat(52)}\n${title}\n${'━'.repeat(52)}\n\n${text}\n\n${'━'.repeat(52)}`;
   }
   if (outFmt==='sentence') {
-    if (Array.isArray(data)) return `This ${lbl} lists ${data.length} record${data.length!==1?'s':''}.`;
-    const pairs=Object.entries(data).filter(([,v])=>typeof v!=='object'&&v!==null&&v!=='').slice(0,5);
-    const parts=pairs.map(([k,v])=>fmtKey(k)+' is '+fmtVal(v,k));
-    if (!parts.length) return `This ${lbl} is an object.`;
-    const last=parts.pop();
-    return `This ${lbl} describes a record where ${parts.length?parts.join(', ')+', and ':''}${last}.`;
+    return text;
   }
   if (outFmt==='csv') {
     const escaped=text.replace(/"/g,'""');
@@ -513,8 +1178,8 @@ function humanizeData(data, fmt, outFmt) {
   }
   if (outFmt==='html') {
     function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-    const body=escH(text).replace(/\n/g,'<br>\n');
-    return '<article class="jh-output"><h2>'+lbl.toUpperCase()+' Summary</h2><div>'+body+'</div></article>';
+    const bodyH=escH(text).replace(/\n/g,'<br>\n');
+    return '<article class="jh-output"><h2>'+lbl.toUpperCase()+' Summary</h2><div>'+bodyH+'</div></article>';
   }
   return text;
 }
@@ -523,10 +1188,18 @@ function humanizeData(data, fmt, outFmt) {
 async function run() {
   const raw    = document.getElementById('input').value.trim();
   const outFmt = document.getElementById('sel-format').value;
+  const mode   = document.getElementById('sel-mode').value;
   const out    = document.getElementById('output');
   const btn    = document.getElementById('run-btn');
 
-  if (!raw) { out.textContent='⚠  Paste some input first'; out.className='error'; return; }
+  if (!raw) {
+    out.textContent = currentLang === 'ru' ? '⚠  Вставьте данные для анализа' : '⚠  Paste some input first';
+    out.className = 'error';
+    updateLiveMeta();
+    return;
+  }
+
+  updateLiveMeta();
 
   let data;
   try {
@@ -537,24 +1210,20 @@ async function run() {
     return;
   }
 
-  // info bar
-  const keys = Array.isArray(data)?data.length:typeof data==='object'?Object.keys(data).length:1;
-  document.getElementById('s-fmt').innerHTML   = `format: <span class="hi">${currentFmt.toUpperCase()}</span>`;
-  document.getElementById('s-type').textContent = `type: ${Array.isArray(data)?'array':typeof data}`;
-  document.getElementById('s-keys').textContent = Array.isArray(data)?`items: ${keys}`:`fields: ${keys}`;
-
   btn.disabled = true;
-  out.className = 'loading';
-  out.textContent = 'Humanizing…';
   const t0 = performance.now();
 
   try {
-    await new Promise(r => setTimeout(r, 40)); // let spinner render
-    const result = humanizeData(data, currentFmt, outFmt);
-    const ms = (performance.now()-t0).toFixed(0);
+    const result = humanizeData(data, currentFmt, outFmt, mode);
+    const ms = Math.max(0, performance.now() - t0).toFixed(0);
     out.textContent = result;
     out.className = '';
     document.getElementById('s-time').innerHTML = `time: <span class="ok">${ms}ms</span>`;
+
+    const words = result.trim().split(/\s+/).filter(Boolean).length;
+    const readingSecs = Math.max(1, Math.round(words / 3.5));
+    document.getElementById('s-words').innerHTML = currentLang === 'ru' ? `слов: <span class="hi">${words}</span>` : `words: <span class="hi">${words}</span>`;
+    document.getElementById('s-read').innerHTML = currentLang === 'ru' ? `чтение: <span class="ok">~${readingSecs} сек</span>` : `read: <span class="ok">~${readingSecs}s</span>`;
   } catch(e) {
     out.textContent = '✖ ' + e.message;
     out.className = 'error';
@@ -563,11 +1232,171 @@ async function run() {
   }
 }
 
+function runDiff() {
+  const rawA = document.getElementById('diff-in-a').value.trim();
+  const rawB = document.getElementById('diff-in-b').value.trim();
+  const out = document.getElementById('diff-out');
+
+  if (!rawA || !rawB) {
+    out.textContent = currentLang === 'ru' ? '⚠ Введите оба JSON для сравнения' : '⚠ Please provide both JSON values';
+    return;
+  }
+
+  try {
+    const a = JSON.parse(rawA);
+    const b = JSON.parse(rawB);
+    const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
+    const isRu = currentLang === 'ru';
+    const lines = [];
+
+    for (const k of allKeys) {
+      const label = fmtKey(k);
+      if (!(k in a)) {
+        lines.push(isRu ? `➕ Добавлено ${label}: ${fmtVal(b[k], k)}` : `➕ Added ${label}: ${fmtVal(b[k], k)}`);
+      } else if (!(k in b)) {
+        lines.push(isRu ? `➖ Удалено ${label} (было: ${fmtVal(a[k], k)})` : `➖ Removed ${label} (was: ${fmtVal(a[k], k)})`);
+      } else if (JSON.stringify(a[k]) !== JSON.stringify(b[k])) {
+        lines.push(isRu ? `✏ Изменено ${label}: ${fmtVal(a[k], k)} → ${fmtVal(b[k], k)}` : `✏ Changed ${label}: ${fmtVal(a[k], k)} → ${fmtVal(b[k], k)}`);
+      }
+    }
+
+    if (!lines.length) {
+      out.textContent = isRu ? '✅ Различий не обнаружено — оба значения абсолютно одинаковы.' : '✅ No differences found — both values are identical.';
+    } else {
+      out.textContent = (isRu ? `Найдено различий (${lines.length}):\n\n` : `Differences found (${lines.length}):\n\n`) + lines.join('\n');
+    }
+  } catch(e) {
+    out.textContent = '✖ ' + e.message;
+  }
+}
+
 function copyOutput() {
   const txt = document.getElementById('output').textContent;
   if (!txt || document.getElementById('output').classList.contains('placeholder')) return;
   navigator.clipboard.writeText(txt).catch(()=>{});
 }
+
+function downloadOutput() {
+  const txt = document.getElementById('output').textContent;
+  if (!txt || document.getElementById('output').classList.contains('placeholder')) return;
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `humanized-${Date.now()}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function speakOutput() {
+  const txt = document.getElementById('output').textContent;
+  if (!txt || document.getElementById('output').classList.contains('placeholder')) return;
+  if (!('speechSynthesis' in window)) {
+    alert('Speech synthesis is not supported in this browser.');
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(txt);
+  utt.lang = currentLang === 'ru' ? 'ru-RU' : 'en-US';
+  window.speechSynthesis.speak(utt);
+}
+
+function prettifyInput() {
+  const area = document.getElementById('input');
+  const raw = area.value.trim();
+  if (!raw) return;
+  try {
+    const parsed = parseInput(raw, currentFmt);
+    if ((currentFmt === 'yaml' || currentFmt === 'yml') && typeof jsyaml !== 'undefined') {
+      area.value = jsyaml.dump(parsed, { indent: 2 });
+    } else {
+      area.value = JSON.stringify(parsed, null, 2);
+    }
+    updateLiveMeta();
+  } catch (e) {
+    area.style.borderColor = 'var(--red)';
+    setTimeout(() => { area.style.borderColor = ''; }, 1000);
+  }
+}
+
+function clearInput() {
+  document.getElementById('input').value = '';
+  const out = document.getElementById('output');
+  out.textContent = currentLang === 'ru' ? 'Результат появится здесь…' : 'Your output will appear here…';
+  out.className = 'placeholder';
+  updateLiveMeta();
+}
+
+function loadSampleDiff() {
+  document.getElementById('diff-in-a').value = JSON.stringify({
+    user: "Alice Johnson",
+    plan: "standard",
+    quota: 1000,
+    features: ["chat", "export"]
+  }, null, 2);
+
+  document.getElementById('diff-in-b').value = JSON.stringify({
+    user: "Alice Johnson",
+    plan: "pro",
+    quota: 50000,
+    features: ["chat", "export", "teamwork"],
+    verified: true
+  }, null, 2);
+
+  runDiff();
+}
+
+// Drag & drop file to textareas
+function bindDropZone(targetEl, onContent, onExtension) {
+  if (!targetEl) return;
+  targetEl.addEventListener('dragover', e => {
+    e.preventDefault();
+    targetEl.classList.add('dragover');
+  });
+  targetEl.addEventListener('dragleave', () => {
+    targetEl.classList.remove('dragover');
+  });
+  targetEl.addEventListener('drop', e => {
+    e.preventDefault();
+    targetEl.classList.remove('dragover');
+    const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = evt => {
+        onContent(evt.target.result);
+        const ext = (file.name || '').split('.').pop().toLowerCase();
+        if (onExtension) onExtension(ext);
+      };
+      reader.onerror = () => {
+        console.error('Failed to read dropped file');
+      };
+      reader.readAsText(file);
+    }
+  });
+}
+
+const mainDrop = document.getElementById('input');
+bindDropZone(mainDrop, (text) => {
+  mainDrop.value = text;
+  updateLiveMeta();
+}, (ext) => {
+  if (ext === 'yaml' || ext === 'yml') switchInputFormat('yaml');
+  else if (ext === 'toml') switchInputFormat('toml');
+  else switchInputFormat('json');
+});
+
+// Live metadata update on keystroke or paste
+mainDrop.addEventListener('input', updateLiveMeta);
+
+const diffInA = document.getElementById('diff-in-a');
+bindDropZone(diffInA, (text) => {
+  diffInA.value = text;
+});
+
+const diffInB = document.getElementById('diff-in-b');
+bindDropZone(diffInB, (text) => {
+  diffInB.value = text;
+});
 
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey||e.metaKey) && e.key==='Enter') run();

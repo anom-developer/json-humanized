@@ -17,14 +17,40 @@ const os     = require('os');
 
 // ─── cache directory ─────────────────────────────────────────────────────────
 
+let resolvedCacheDir = null;
+
 function getCacheDir() {
-  return process.env.JH_CACHE_DIR || path.join(os.homedir(), '.jh-cache');
+  if (process.env.JH_CACHE_DIR) return process.env.JH_CACHE_DIR;
+  if (resolvedCacheDir) return resolvedCacheDir;
+
+  const homeCandidate = path.join(os.homedir(), '.jh-cache');
+  try {
+    if (!fs.existsSync(homeCandidate)) {
+      fs.mkdirSync(homeCandidate, { recursive: true });
+    }
+    const testFile = path.join(homeCandidate, `.test-${process.pid}`);
+    fs.writeFileSync(testFile, '1');
+    fs.unlinkSync(testFile);
+    resolvedCacheDir = homeCandidate;
+    return resolvedCacheDir;
+  } catch {
+    const tmpCandidate = path.join(os.tmpdir(), '.jh-cache');
+    try {
+      if (!fs.existsSync(tmpCandidate)) {
+        fs.mkdirSync(tmpCandidate, { recursive: true });
+      }
+    } catch {}
+    resolvedCacheDir = tmpCandidate;
+    return resolvedCacheDir;
+  }
 }
 
 function ensureCacheDir() {
   const dir = getCacheDir();
   if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+    } catch {}
   }
   return dir;
 }
