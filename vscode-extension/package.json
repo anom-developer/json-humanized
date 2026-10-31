@@ -3,7 +3,7 @@
   "displayName": "json-humanized — Turn JSON into Human Language",
   "description": "Transform any JSON, YAML, or TOML into natural, readable human prose directly in VS Code. Offline & AI support.",
   "version": "2.3.0",
-  "publisher": "AceAnomDev",
+  "publisher": "anom-developer",
   "engines": {
     "vscode": "^1.75.0"
   },

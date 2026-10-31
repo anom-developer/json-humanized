@@ -64,20 +64,16 @@ Works **100% offline** (no API key needed) — or plug in Claude AI / OpenAI / O
 ## Installation
 
 ```bash
-npm install -g json-humanized
-```
-
-Or use without installing:
-
-```bash
-npx json-humanized data.json
+git clone https://github.com/anom-developer/json-humanized.git
+cd json-humanized
+npm install
 ```
 
 ---
 
 ## Usage
 
-> **[🌐 Try it in the browser →](https://aceanomdev.github.io/json-humanized/)** — no install needed.
+> **[🌐 Try it in the browser →](https://anom-developer.github.io/json-humanized/)** — no install needed.
 
 ### CLI
 
@@ -388,28 +384,22 @@ $ jh v1.json --diff v2.json --engine ai --lang Russian
 ```
 json-humanized/
 ├── bin/
-│   └── cli.js                  # CLI entry point
+│   └── cli.js                  # CLI entry point (jh)
+├── extension/                  # Chrome / Edge / Brave / Opera browser extension
+├── vscode-extension/           # Visual Studio Code extension
+├── docs/                       # Web interactive playground (GitHub Pages)
 ├── src/
 │   ├── index.js                # Public API
-│   ├── humanizer.js            # Rule-based engine
+│   ├── humanizer.js            # Rule-based offline engine (English & Russian)
 │   ├── config.js               # Config file loader
 │   ├── cache.js                # AI response cache
 │   ├── diff.js                 # Diff engine
 │   ├── watch.js                # File watcher
-│   ├── parsers/
-│   │   └── index.js            # JSON / YAML / TOML parser
-│   ├── formatters/
-│   │   ├── index.js            # plain, markdown, story, json, sentence, csv, html
-│   │   └── template.js         # Handlebars template renderer
-│   └── strategies/
-│       ├── ai.js               # AI provider router
-│       ├── openai.js           # OpenAI provider
-│       └── ollama.js           # Ollama provider
-├── docs/
-├── examples/
-├── test/
-│   ├── index.test.js           # 43 core tests
-│   └── full_audit.js           # 88 exhaustive checks
+│   ├── parsers/                # JSON / YAML / TOML parsers
+│   ├── formatters/             # plain, markdown, story, json, sentence, csv, html
+│   └── strategies/             # AI providers (Anthropic, OpenAI, Ollama)
+├── start-ui.bat / start-ui.sh  # 1-click desktop UI launchers
+├── test/                       # Comprehensive test suites (283 checks)
 ├── index.d.ts                  # TypeScript types
 └── package.json
 ```

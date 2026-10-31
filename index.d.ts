@@ -1,5 +1,5 @@
 // Type definitions for json-humanized v2.2
-// Project: https://github.com/AceAnomDev/json-humanized
+// Project: https://github.com/anom-developer/json-humanized
 
 export type Engine     = 'local' | 'ai';
 export type AIProvider = 'anthropic' | 'openai' | 'ollama';
