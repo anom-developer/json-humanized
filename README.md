@@ -73,7 +73,7 @@ npm install
 
 ## Usage
 
-> **[🌐 Try it in the browser →](https://anom-developer.github.io/json-humanized/)** — no install needed.
+
 
 ### CLI
 
