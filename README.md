@@ -1,17 +1,26 @@
-<div align="center">
+﻿<div align="center">
+
+<img src="docs/icon.svg" width="96" height="96" alt="json-humanized logo" />
 
 # 🗣️ json-humanized
 
 **Transform any JSON / YAML / TOML into natural human language**
 
 [![CI](https://github.com/anom-developer/json-humanized/actions/workflows/ci.yml/badge.svg)](https://github.com/anom-developer/json-humanized/actions/workflows/ci.yml)
-[![license](https://img.shields.io/badge/license-MIT-00e5ff?style=flat-square)](LICENSE)
 [![version](https://img.shields.io/badge/version-2.2.0-00ff9d?style=flat-square)](package.json)
-[![node](https://img.shields.io/badge/node-%3E=16-339933?style=flat-square)](package.json)
+[![node](https://img.shields.io/badge/node-%3E=16-339933?style=flat-square&logo=node.js&logoColor=white)](package.json)
+[![license](https://img.shields.io/badge/license-MIT-00e5ff?style=flat-square)](LICENSE)
 
 **[🌐 Live Demo](https://anom-developer.github.io/json-humanized/)** &nbsp;·&nbsp;
 **[🐛 Issues](https://github.com/anom-developer/json-humanized/issues)**
 · [Installation](#installation) · [Usage](#usage) · [API](#api) · [Config](#config-file)
+
+<br/>
+
+<a href="https://anom-developer.github.io/json-humanized/">
+  <img src="docs/demo.svg" alt="json-humanized interactive transformation demo" width="100%" />
+</a>
+
 </div>
 
 ---
