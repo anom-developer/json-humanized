@@ -33,7 +33,7 @@
       .mono { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
       .sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 
-      /* Arrow & Wave Pulse */
+      /* Arrow and Wave Pulse */
       @keyframes pulseGlow {
         0%, 100% { opacity: 0.6; transform: scale(0.98); }
         50% { opacity: 1; transform: scale(1.02); }
@@ -109,7 +109,7 @@
     </g>
   </g>
 
-  <!-- Center Transformation Arrow & Sound Waves -->
+  <!-- Center Transformation Arrow and Sound Waves -->
   <g class="glow-arrow" filter="url(#cyanGlow)">
     <!-- Arrow Background Pill -->
     <rect x="414" y="154" width="52" height="52" rx="26" fill="#0f2942" stroke="#00e5ff" stroke-width="1.5"/>
@@ -165,6 +165,6 @@
 
   <!-- Bottom Badges Bar -->
   <g class="sans" font-size="11" fill="#94a3b8" text-anchor="middle">
-    <text x="440" y="318">✦ 100% Offline Engine &nbsp;·&nbsp; ✦ Chrome Extension &nbsp;·&nbsp; ✦ 1-Click Desktop UI &nbsp;·&nbsp; ✦ VS Code Integration</text>
+    <text x="440" y="318">✦ 100% Offline Engine &#160;·&#160; ✦ Chrome Extension &#160;·&#160; ✦ 1-Click Desktop UI &#160;·&#160; ✦ VS Code Integration</text>
   </g>
 </svg>

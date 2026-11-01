@@ -17,7 +17,7 @@
   <g fill="#ffffff">
     <!-- Head -->
     <circle cx="48" cy="44" r="19"/>
-    <!-- Neck & Shoulders -->
+    <!-- Neck and Shoulders -->
     <path d="M 40 60 L 56 60 L 56 72 Q 74 76 76 96 L 20 96 Q 22 76 40 72 Z"/>
   </g>
 

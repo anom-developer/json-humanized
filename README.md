@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 <img src="docs/icon.svg" width="96" height="96" alt="json-humanized logo" />
 
